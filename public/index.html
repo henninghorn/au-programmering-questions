@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Spørgsmål til programmering - Hold 1</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+        }
+
+        body,
+        form textarea {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+
+        #app {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        hr {
+            border: none;
+            border-bottom: 1px dashed #ccc;
+            margin: 2em 0;
+            height: 1px;
+            width: 90vw;
+        }
+
+        form textarea {
+            border: 1px solid #eee;
+            height: 200px;
+            padding: .5em;
+            border-radius: 5px;
+            font-size: 1.2em;
+            width: 80vw;
+            max-width: 600px;
+        }
+
+        .questions {
+            width: 80vw;
+            max-width: 600px;
+        }
+
+        .questions p {
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: .5em;
+        }
+
+        .questions p:nth-child(odd) {
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Spørgsmål til programmering - Hold 1</h1>
+
+        <form @submit.prevent="postQuestion">
+            <textarea name="question" id="question" placeholder="Indtast spørgsmål her..." v-model="question"></textarea><br>
+            <input type="submit" value="Send spørgsmål">
+        </form>
+
+        <hr>
+
+        <div class="questions">
+            <p v-for="question in questions">
+                {{ question.question }}
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            let socket = io()
+
+            let app = new Vue({
+                el: '#app',
+
+                data: {
+                    message: 'Hello World',
+                    isLoading: true,
+                    questions: [],
+                    question: ''
+                },
+
+                mounted() {
+                    this.getQuestions()
+
+                    socket.on('new question', question => {
+                        this.questions.unshift(question)
+                    })
+                },
+
+                methods: {
+                    getQuestions() {
+                        fetch('/questions')
+                        .then(response => response.json())
+                        .then(questions => {
+                            this.questions = questions
+                        })
+                    },
+                    postQuestion() {
+                        fetch('/questions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ question: this.question })
+                        })
+                    }
+                }
+            })
+        })
+    </script>
+</body>
+</html>
